@@ -36,11 +36,9 @@ parameters:
 - displayName: Quay.io Username
   description: Quay.io username to push the images to tasks-sample-app repository on your Quay.io account
   name: QUAY_USERNAME
-  value: "srereddy@redhat.com"
 - displayName: Quay.io Password
   description: Quay.io password to push the images to tasks-sample-app repository on your Quay.io account
   name: QUAY_PASSWORD
-  value: "Reddy@321"
 - displayName: Quay.io Image Repository
   description: Quay.io repository for pushing Tasks container images
   name: QUAY_REPOSITORY
