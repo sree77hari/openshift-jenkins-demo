@@ -30,20 +30,22 @@ parameters:
   required: true
 - displayName: Integrate Quay.io
   description: Integrate image build and deployment with Quay.io 
-  value: "false"
+  value: "true"
   name: ENABLE_QUAY
   required: true
 - displayName: Quay.io Username
   description: Quay.io username to push the images to tasks-sample-app repository on your Quay.io account
   name: QUAY_USERNAME
+  value: "srereddy@redhat.com"
 - displayName: Quay.io Password
   description: Quay.io password to push the images to tasks-sample-app repository on your Quay.io account
   name: QUAY_PASSWORD
+  value: "Reddy@321"
 - displayName: Quay.io Image Repository
   description: Quay.io repository for pushing Tasks container images
   name: QUAY_REPOSITORY
   required: true
-  value: tasks-app
+  value: srereddy/tasks-app
 objects:
 - apiVersion: v1
   groupNames: null
@@ -153,7 +155,7 @@ objects:
                     openshift.withCluster() {
                       if (env.ENABLE_QUAY.toBoolean()) {
                         withCredentials([usernamePassword(credentialsId: "${openshift.project()}-quay-cicd-secret", usernameVariable: "QUAY_USER", passwordVariable: "QUAY_PWD")]) {
-                          sh "skopeo copy docker://quay.io/${QUAY_USERNAME}/${QUAY_REPOSITORY}:latest docker://quay.io/${QUAY_USERNAME}/${QUAY_REPOSITORY}:stage --src-creds \"$QUAY_USER:$QUAY_PWD\" --dest-creds \"$QUAY_USER:$QUAY_PWD\" --src-tls-verify=false --dest-tls-verify=false"
+                          sh "skopeo copy docker://quay.io/${QUAY_REPOSITORY}:latest docker://quay.io/${QUAY_REPOSITORY}:stage --src-creds \"$QUAY_USER:$QUAY_PWD\" --dest-creds \"$QUAY_USER:$QUAY_PWD\" --src-tls-verify=false --dest-tls-verify=false"
                         }
                       } else {
                         openshift.tag("${env.DEV_PROJECT}/tasks:latest", "${env.STAGE_PROJECT}/tasks:stage")
@@ -289,17 +291,17 @@ objects:
               oc label secret quay-cicd-secret credential.sync.jenkins.openshift.io=true -n ${CICD_NAMESPACE}
               
               # dev
-              oc create secret docker-registry quay-cicd-secret --docker-server=quay.io --docker-username="${QUAY_USERNAME}" --docker-password="${QUAY_PASSWORD}" --docker-email=cicd@redhat.com -n ${DEV_PROJECT}
-              oc new-build --name=tasks --image-stream=wildfly:latest --binary=true --push-secret=quay-cicd-secret --to-docker --to='quay.io/${QUAY_USERNAME}/${QUAY_REPOSITORY}:latest' -n ${DEV_PROJECT}
-              oc new-app --name=tasks --docker-image=quay.io/${QUAY_USERNAME}/${QUAY_REPOSITORY}:latest --allow-missing-images --as-deployment-config -n ${DEV_PROJECT}
+              oc create secret docker-registry quay-cicd-secret --docker-server=quay.io --docker-username="${QUAY_USERNAME}" --docker-password="${QUAY_PASSWORD}" --docker-email=srereddy@redhat.com -n ${DEV_PROJECT}
+              oc new-build --name=tasks --image-stream=wildfly:latest --binary=true --push-secret=quay-cicd-secret --to-docker --to='quay.io/${QUAY_REPOSITORY}:latest' -n ${DEV_PROJECT}
+              oc new-app --name=tasks --docker-image=quay.io/${QUAY_REPOSITORY}:latest --allow-missing-images --as-deployment-config -n ${DEV_PROJECT}
               oc set triggers dc tasks --remove-all -n ${DEV_PROJECT}
               oc patch dc tasks -p '{"spec": {"template": {"spec": {"containers": [{"name": "tasks", "imagePullPolicy": "Always"}]}}}}' -n ${DEV_PROJECT}
               oc delete is tasks -n ${DEV_PROJECT}
               oc secrets link default quay-cicd-secret --for=pull -n ${DEV_PROJECT}
               
               # stage
-              oc create secret docker-registry quay-cicd-secret --docker-server=quay.io --docker-username="${QUAY_USERNAME}" --docker-password="${QUAY_PASSWORD}" --docker-email=cicd@redhat.com -n ${STAGE_PROJECT}
-              oc new-app --name=tasks --docker-image=quay.io/${QUAY_USERNAME}/${QUAY_REPOSITORY}:stage --allow-missing-images --as-deployment-config -n ${STAGE_PROJECT}
+              oc create secret docker-registry quay-cicd-secret --docker-server=quay.io --docker-username="${QUAY_USERNAME}" --docker-password="${QUAY_PASSWORD}" --docker-email=srereddy@redhat.com -n ${STAGE_PROJECT}
+              oc new-app --name=tasks --docker-image=quay.io/${QUAY_REPOSITORY}:stage --allow-missing-images --as-deployment-config -n ${STAGE_PROJECT}
               oc set triggers dc tasks --remove-all -n ${STAGE_PROJECT}
               oc patch dc tasks -p '{"spec": {"template": {"spec": {"containers": [{"name": "tasks", "imagePullPolicy": "Always"}]}}}}' -n ${STAGE_PROJECT}
               oc delete is tasks -n ${STAGE_PROJECT}
